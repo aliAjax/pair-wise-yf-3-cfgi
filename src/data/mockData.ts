@@ -1,7 +1,15 @@
-import type { SmellMemory } from '../utils/constants';
+import type { SmellMemory, Room } from '../utils/constants';
 
 const now = Date.now();
 const daysAgo = (d: number) => new Date(now - d * 86400000).toISOString();
+
+export const defaultRooms: Room[] = [
+  { id: 'room-east', name: '东厢房', emoji: '🛏️', capacity: 4, description: '朝阳的卧房，老木家具的味道' },
+  { id: 'room-west', name: '西厢书房', emoji: '📚', capacity: 3, description: '纸墨与灰尘共存的地方' },
+  { id: 'room-attic', name: '阁楼', emoji: '🕸️', capacity: 3, description: '堆满旧物的斜坡屋顶' },
+  { id: 'room-kitchen', name: '老厨房', emoji: '🍳', capacity: 3, description: '烟火气最重的地方' },
+  { id: 'room-cellar', name: '地窖', emoji: '🕯️', capacity: 2, description: '阴凉潮湿，陶罐成排' },
+];
 
 export const mockMemories: SmellMemory[] = [
   {
@@ -16,6 +24,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#8B5A2B',
     emotion: 'nostalgic',
     want_again: true,
+    room_id: 'room-east',
     created_at: daysAgo(42),
     updated_at: daysAgo(42),
   },
@@ -31,6 +40,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#5A7D6A',
     emotion: 'peaceful',
     want_again: true,
+    room_id: 'room-attic',
     created_at: daysAgo(28),
     updated_at: daysAgo(28),
   },
@@ -46,6 +56,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#9B8AA6',
     emotion: 'melancholy',
     want_again: true,
+    room_id: 'room-west',
     created_at: daysAgo(18),
     updated_at: daysAgo(10),
   },
@@ -61,6 +72,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#A0522D',
     emotion: 'warm',
     want_again: true,
+    room_id: 'room-cellar',
     created_at: daysAgo(60),
     updated_at: daysAgo(60),
   },
@@ -76,6 +88,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#4A3728',
     emotion: 'joyful',
     want_again: false,
+    room_id: 'room-kitchen',
     created_at: daysAgo(100),
     updated_at: daysAgo(55),
   },
@@ -91,6 +104,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#F6C6D0',
     emotion: 'joyful',
     want_again: true,
+    room_id: 'room-east',
     created_at: daysAgo(15),
     updated_at: daysAgo(15),
   },
@@ -106,6 +120,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#CD5C5C',
     emotion: 'warm',
     want_again: true,
+    room_id: 'room-kitchen',
     created_at: daysAgo(5),
     updated_at: daysAgo(5),
   },
@@ -121,6 +136,7 @@ export const mockMemories: SmellMemory[] = [
     color_association: '#7DA08C',
     emotion: 'nostalgic',
     want_again: true,
+    room_id: 'room-attic',
     created_at: daysAgo(3),
     updated_at: daysAgo(2),
   },

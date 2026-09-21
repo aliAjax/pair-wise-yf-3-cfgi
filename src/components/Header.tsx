@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react';
+import { Plus, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Props {
   onAdd: () => void;
@@ -33,15 +34,24 @@ export default function Header({ onAdd, memoryCount }: Props) {
               </span>
             </div>
           </div>
-          <button
-            onClick={onAdd}
-            className="group relative inline-flex items-center justify-center gap-2 bg-ochre-500 hover:bg-ochre-600 active:bg-ochre-700 text-paper-50 font-medium rounded-2xl px-6 py-3.5 shadow-paper hover:shadow-paper-hover hover:-translate-y-1 transition-all duration-250 self-start md:self-auto"
-          >
-            <span className="absolute inset-0 rounded-2xl opacity-20"
-              style={{ background: 'radial-gradient(circle at 20% 20%, #fff 0%, transparent 60%)' }} />
-            <Plus className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.5} />
-            <span className="font-serif text-lg">封存一段气味</span>
-          </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-start md:self-auto">
+            <Link
+              to="/relocation"
+              className="inline-flex items-center justify-center gap-2 bg-paper-200/90 hover:bg-paper-300 text-ink-800 font-medium rounded-2xl px-6 py-3.5 border border-paper-400 shadow-paper hover:shadow-paper-hover hover:-translate-y-1 transition-all duration-250"
+            >
+              <Truck className="w-5 h-5 text-ochre-600" strokeWidth={2.2} />
+              <span className="font-serif text-lg">搬迁归属台</span>
+            </Link>
+            <button
+              onClick={onAdd}
+              className="group relative inline-flex items-center justify-center gap-2 bg-ochre-500 hover:bg-ochre-600 active:bg-ochre-700 text-paper-50 font-medium rounded-2xl px-6 py-3.5 shadow-paper hover:shadow-paper-hover hover:-translate-y-1 transition-all duration-250"
+            >
+              <span className="absolute inset-0 rounded-2xl opacity-20"
+                style={{ background: 'radial-gradient(circle at 20% 20%, #fff 0%, transparent 60%)' }} />
+              <Plus className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.5} />
+              <span className="font-serif text-lg">封存一段气味</span>
+            </button>
+          </div>
         </div>
         <div className="mt-8 h-px w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #CBB993 20%, #CBB993 80%, transparent 100%)' }} />
       </div>

@@ -6,7 +6,8 @@ import MemoryCard from '../components/MemoryCard';
 import MemoryModal from '../components/MemoryModal';
 import { useMemoryStore } from '../store/memoryStore';
 import type { Filters } from '../utils/helpers';
-import { filterMemories } from '../utils/helpers';
+import { filterMemories, getLockedMemoryIds } from '../utils/helpers';
+import { getRoomInfo } from '../utils/constants';
 import type { SmellMemory } from '../utils/constants';
 import type { MemoryInput } from '../store/memoryStore';
 import { BookOpenCheck } from 'lucide-react';
@@ -18,7 +19,7 @@ const defaultFilters: Filters = {
 };
 
 export default function Home() {
-  const { memories, initIfEmpty, addMemory, updateMemory, deleteMemory } = useMemoryStore();
+  const { memories, rooms, batches, initIfEmpty, addMemory, updateMemory, deleteMemory } = useMemoryStore();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -33,13 +34,27 @@ export default function Home() {
     [memories, filters],
   );
 
+  const lockedIds = useMemo(() => getLockedMemoryIds(batches), [batches]);
+
+  const occupancy = useMemo(() => {
+    const map: Record<string, number> = {};
+    memories.forEach((m) => {
+      if (m.room_id) map[m.room_id] = (map[m.room_id] ?? 0) + 1;
+    });
+    return map;
+  }, [memories]);
+
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setFilters((f) => ({ ...f, [key]: value }));
   };
   const resetFilters = () => setFilters(defaultFilters);
 
   const openAddModal = () => { setEditing(null); setModalOpen(true); };
-  const openEditModal = (m: SmellMemory) => { setEditing(m); setModalOpen(true); };
+  const openEditModal = (m: SmellMemory) => {
+    if (lockedIds.has(m.id)) return;
+    setEditing(m);
+    setModalOpen(true);
+  };
 
   const handleSubmit = (data: MemoryInput) => {
     if (editing) {
@@ -50,6 +65,10 @@ export default function Home() {
   };
 
   const handleDelete = (id: string) => {
+    if (lockedIds.has(id)) {
+      window.alert('这段记忆正在搬迁批次中，暂时锁定，无法删除');
+      return;
+    }
     const target = memories.find((m) => m.id === id);
     const msg = `确认删除「${target?.location ?? '这段记忆'}」吗？`;
     if (window.confirm(msg)) {
@@ -123,6 +142,8 @@ export default function Home() {
                     memory={m}
                     index={idx}
                     isExpanded={expandedId === m.id}
+                    room={getRoomInfo(rooms, m.room_id)}
+                    locked={lockedIds.has(m.id)}
                     onToggle={() => setExpandedId(expandedId === m.id ? null : m.id)}
                     onEdit={() => openEditModal(m)}
                     onDelete={() => handleDelete(m.id)}
@@ -143,6 +164,8 @@ export default function Home() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         editingData={editing}
+        rooms={rooms}
+        occupancy={occupancy}
       />
     </div>
   );

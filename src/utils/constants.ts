@@ -14,8 +14,53 @@ export interface SmellMemory {
   color_association: string;
   emotion: Emotion;
   want_again: boolean;
+  room_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  emoji: string;
+  capacity: number;
+  description: string;
+}
+
+export type BatchStatus = 'pending' | 'confirmed' | 'cancelled' | 'undone';
+
+export interface RelocationItem {
+  memory_id: string;
+  from_room_id: string;
+}
+
+export interface RelocationBatch {
+  id: string;
+  items: RelocationItem[];
+  target_room_id: string;
+  handover_date: string; // YYYY-MM-DD 交接日
+  reason: string;
+  status: BatchStatus;
+  created_at: string;
+  confirmed_at: string | null;
+  cancelled_at: string | null;
+  undone_at: string | null;
+  // 确认时各记忆的 updated_at 快照，用于判断「确认后未再修改」
+  confirm_snapshot: Record<string, string> | null;
+  // 确认前各记忆在列表中的位置快照，撤销时恢复原顺序
+  restore_indices: Record<string, number> | null;
+}
+
+export const BATCH_STATUS_INFO: Record<BatchStatus, { label: string; emoji: string; bg: string; text: string }> = {
+  pending: { label: '待确认', emoji: '⏳', bg: 'bg-ochre-100', text: 'text-ochre-600' },
+  confirmed: { label: '已确认', emoji: '✅', bg: 'bg-moss-100', text: 'text-moss-600' },
+  cancelled: { label: '已取消', emoji: '🚫', bg: 'bg-paper-300', text: 'text-ink-700' },
+  undone: { label: '已撤销', emoji: '↩️', bg: 'bg-lavender-300/40', text: 'text-lavender-600' },
+};
+
+export function getRoomInfo(rooms: Room[], id: string | null | undefined): Room | null {
+  if (!id) return null;
+  return rooms.find((r) => r.id === id) ?? null;
 }
 
 export const SEASONS: { value: Season; label: string; emoji: string }[] = [

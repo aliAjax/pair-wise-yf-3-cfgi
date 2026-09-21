@@ -1,4 +1,4 @@
-import type { SmellMemory } from './constants';
+import type { SmellMemory, RelocationBatch } from './constants';
 
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
@@ -76,4 +76,36 @@ export function isLightColor(hex: string): boolean {
 
 export function contrastTextColor(hex: string): string {
   return isLightColor(hex) ? '#2A2118' : '#FBF7EE';
+}
+
+/** 取 ISO 时间的本地日期部分，返回 YYYY-MM-DD（与 date input 格式一致，可直接字符串比较） */
+export function localDateStr(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** 处于待确认批次中的记忆 id 集合（这些记忆被锁定） */
+export function getLockedMemoryIds(batches: RelocationBatch[]): Set<string> {
+  const ids = new Set<string>();
+  batches.forEach((b) => {
+    if (b.status === 'pending') b.items.forEach((i) => ids.add(i.memory_id));
+  });
+  return ids;
+}
+
+/** 已确认批次是否可撤销：返回 null 表示可撤销，否则返回阻止原因 */
+export function getUndoBlockReason(batch: RelocationBatch, memories: SmellMemory[]): string | null {
+  if (batch.status !== 'confirmed') return null;
+  const snapshot = batch.confirm_snapshot ?? {};
+  for (const item of batch.items) {
+    const m = memories.find((mm) => mm.id === item.memory_id);
+    if (!m) return '批次内部分记忆已被删除，无法完整恢复原房间和顺序';
+    if (m.updated_at !== snapshot[item.memory_id]) {
+      return `「${m.location}」在确认后被修改过，无法撤销`;
+    }
+  }
+  return null;
 }

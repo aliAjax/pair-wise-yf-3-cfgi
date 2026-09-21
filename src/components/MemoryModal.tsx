@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
-import type { SmellMemory, Season, SmellType, Emotion } from '../utils/constants';
+import type { SmellMemory, Season, SmellType, Emotion, Room } from '../utils/constants';
 import { SEASONS, SMELL_TYPES, EMOTIONS } from '../utils/constants';
 import type { MemoryInput } from '../store/memoryStore';
 
@@ -9,6 +9,8 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: MemoryInput) => void;
   editingData: SmellMemory | null;
+  rooms: Room[];
+  occupancy: Record<string, number>;
 }
 
 const defaultForm: MemoryInput = {
@@ -22,12 +24,13 @@ const defaultForm: MemoryInput = {
   color_association: '#8B5A2B',
   emotion: 'nostalgic',
   want_again: true,
+  room_id: null,
 };
 
 const intensityTicks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const humidityTicks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-export default function MemoryModal({ isOpen, onClose, onSubmit, editingData }: Props) {
+export default function MemoryModal({ isOpen, onClose, onSubmit, editingData, rooms, occupancy }: Props) {
   const [form, setForm] = useState<MemoryInput>(defaultForm);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -125,6 +128,29 @@ export default function MemoryModal({ isOpen, onClose, onSubmit, editingData }: 
                   className="scent-input"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-ink-700 mb-1.5">归属房间</label>
+              <select
+                value={form.room_id ?? ''}
+                onChange={(e) => update('room_id', e.target.value || null)}
+                className="scent-input scent-select"
+              >
+                <option value="">📦 暂不分配（未归档）</option>
+                {rooms.map((r) => {
+                  const occ = occupancy[r.id] ?? 0;
+                  const full = occ >= r.capacity && form.room_id !== r.id;
+                  return (
+                    <option key={r.id} value={r.id} disabled={full}>
+                      {r.emoji} {r.name}（{occ}/{r.capacity}）{full ? ' · 已满' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-[11px] text-ink-700/50 mt-1">
+                未分配房间的记忆无法参与搬迁批次；房间容量有限，满员后不可再迁入
+              </p>
             </div>
           </div>
 
