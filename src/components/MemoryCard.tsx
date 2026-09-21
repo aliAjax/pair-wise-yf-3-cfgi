@@ -1,18 +1,19 @@
 import type { SmellMemory } from '../utils/constants';
 import { getSeasonInfo, getSmellTypeInfo, getEmotionInfo } from '../utils/constants';
 import { formatDate, contrastTextColor } from '../utils/helpers';
-import { Pencil, Trash2, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, ChevronUp, Heart, Lock } from 'lucide-react';
 
 interface Props {
   memory: SmellMemory;
   index: number;
   isExpanded: boolean;
+  locked?: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit, onDelete }: Props) {
+export default function MemoryCard({ memory, index, isExpanded, locked = false, onToggle, onEdit, onDelete }: Props) {
   const season = getSeasonInfo(memory.season);
   const stype = getSmellTypeInfo(memory.smell_type);
   const emotion = getEmotionInfo(memory.emotion);
@@ -77,6 +78,11 @@ export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit
               {memory.want_again && (
                 <span className="scent-tag bg-moss-100 text-moss-600">
                   <Heart className="w-3 h-3 fill-current" /> 想再闻
+                </span>
+              )}
+              {locked && (
+                <span className="scent-tag bg-brick-500/10 text-brick-600" title="已被待确认的搬迁批次锁定">
+                  <Lock className="w-3 h-3" /> 搬迁锁定
                 </span>
               )}
             </div>
@@ -145,25 +151,31 @@ export default function MemoryCard({ memory, index, isExpanded, onToggle, onEdit
                 <div className="flex items-center gap-1.5 text-[11px] text-ink-700/50">
                   <span>更新于 {formatDate(memory.updated_at)}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-ochre-600 hover:bg-ochre-100 transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> 编辑
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-brick-500 hover:bg-brick-500/10 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> 删除
-                  </button>
-                </div>
+                {locked ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-brick-600/80">
+                    <Lock className="w-3.5 h-3.5" /> 批次锁定中
+                  </span>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-ochre-600 hover:bg-ochre-100 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> 编辑
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-brick-500 hover:bg-brick-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> 删除
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {!isExpanded && (
+          {!isExpanded && !locked && (
             <div className="px-4 pb-3 flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 -mt-1">
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(); }}

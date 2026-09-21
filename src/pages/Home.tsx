@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
+import TopNav from '../components/TopNav';
 import FilterPanel from '../components/FilterPanel';
 import VisualizationPanel from '../components/VisualizationPanel';
 import MemoryCard from '../components/MemoryCard';
@@ -18,7 +20,7 @@ const defaultFilters: Filters = {
 };
 
 export default function Home() {
-  const { memories, initIfEmpty, addMemory, updateMemory, deleteMemory } = useMemoryStore();
+  const { memories, batches, rooms, initIfEmpty, addMemory, updateMemory, deleteMemory } = useMemoryStore();
   const [filters, setFilters] = useState<Filters>(defaultFilters);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -27,6 +29,14 @@ export default function Home() {
   useEffect(() => {
     initIfEmpty();
   }, [initIfEmpty]);
+
+  const lockedIds = useMemo(() => {
+    const ids = new Set<string>();
+    batches
+      .filter((b) => b.status === 'draft')
+      .forEach((b) => b.memoryIds.forEach((id) => ids.add(id)));
+    return ids;
+  }, [batches]);
 
   const filteredMemories = useMemo(
     () => filterMemories(memories, filters),
@@ -39,21 +49,34 @@ export default function Home() {
   const resetFilters = () => setFilters(defaultFilters);
 
   const openAddModal = () => { setEditing(null); setModalOpen(true); };
-  const openEditModal = (m: SmellMemory) => { setEditing(m); setModalOpen(true); };
+  const openEditModal = (m: SmellMemory) => {
+    if (lockedIds.has(m.id)) {
+      window.alert('这条记忆已被待确认的搬迁批次锁定，先确认或取消批次后再修改');
+      return;
+    }
+    setEditing(m);
+    setModalOpen(true);
+  };
 
   const handleSubmit = (data: MemoryInput) => {
     if (editing) {
-      updateMemory(editing.id, data);
+      const res = updateMemory(editing.id, data);
+      if (!res.ok) window.alert(res.error);
     } else {
       addMemory(data);
     }
   };
 
   const handleDelete = (id: string) => {
+    if (lockedIds.has(id)) {
+      window.alert('这条记忆已被待确认的搬迁批次锁定，无法删除');
+      return;
+    }
     const target = memories.find((m) => m.id === id);
     const msg = `确认删除「${target?.location ?? '这段记忆'}」吗？`;
     if (window.confirm(msg)) {
-      deleteMemory(id);
+      const res = deleteMemory(id);
+      if (!res.ok) window.alert(res.error);
       if (expandedId === id) setExpandedId(null);
     }
   };
@@ -66,11 +89,28 @@ export default function Home() {
     });
   };
 
+  const unassignedCount = useMemo(
+    () => memories.filter((m) => !rooms.some((r) => r.name === m.location)).length,
+    [memories, rooms],
+  );
+
   return (
     <div className="min-h-screen">
+      <TopNav />
       <Header onAdd={openAddModal} memoryCount={memories.length} />
 
       <main className="container max-w-6xl pb-20">
+        {unassignedCount > 0 && (
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-2xl border border-brick-400/40 bg-brick-500/10 px-5 py-3">
+            <p className="text-sm text-brick-600">
+              🔑 有 <b>{unassignedCount}</b> 条记忆的位置尚未登记为房间，搬迁时会因「缺少原房间」无法选中。可到搬迁归属台补建同名房间。
+            </p>
+            <Link to="/relocation" className="text-sm font-medium text-ochre-600 hover:text-ochre-700 underline underline-offset-2 shrink-0">
+              前往搬迁归属台 →
+            </Link>
+          </div>
+        )}
+
         <FilterPanel
           filters={filters}
           onChange={handleFilterChange}
@@ -123,6 +163,7 @@ export default function Home() {
                     memory={m}
                     index={idx}
                     isExpanded={expandedId === m.id}
+                    locked={lockedIds.has(m.id)}
                     onToggle={() => setExpandedId(expandedId === m.id ? null : m.id)}
                     onEdit={() => openEditModal(m)}
                     onDelete={() => handleDelete(m.id)}
